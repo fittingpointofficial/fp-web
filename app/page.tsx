@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { products } from '@/lib/data';
 import { ProductCard } from '@/components/product-card';
 import { HomeHeroCarousel } from '@/components/home-hero-carousel';
+import { CONTACT } from '@/lib/site-config';
 
 const offers = [
   'UMRAH STARTER KITS -15%',
@@ -53,7 +54,7 @@ export default function HomePage() {
           </article>
           <article className="rounded-2xl border border-black/5 p-6 shadow-sm">
             <h3 className="font-heading text-2xl">Store Address</h3>
-            <p className="mt-2 text-sm text-black/65">Salman Plaza, 82, Manik Bagh Rd, Nandanvan Colony, Indore, MP 452014</p>
+            <p className="mt-2 text-sm text-black/65">{CONTACT.address}</p>
           </article>
         </div>
       </section>

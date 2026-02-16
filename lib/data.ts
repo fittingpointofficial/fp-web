@@ -1,4 +1,5 @@
 import { Category, Product, SiteSettings } from './types';
+import { CONTACT } from './site-config';
 
 export const categories: Category[] = [
   { id: 'c1', name: 'Ihram & Clothing', slug: 'ihram-clothing', sortOrder: 1 },
@@ -43,8 +44,8 @@ export const products: Product[] = [
 
 export const defaultSettings: SiteSettings = {
   logoUrl: '/logo.svg',
-  whatsappNumber: '919826022251',
-  contactEmail: 'fitting.point.official@gmail.com',
+  whatsappNumber: CONTACT.whatsappNumber,
+  contactEmail: CONTACT.email,
   primaryColor: '#165D54',
   secondaryColor: '#C39A5F',
   fontStyle: 'serif',

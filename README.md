@@ -11,9 +11,9 @@ Next.js App Router + Tailwind implementation for a premium Islamic / Hajj / Umra
 - Supabase-ready relational schema (`db/supabase-schema.sql`)
 
 ## Contact details used in UI
-- Address: Salman Plaza, 82, Manik Bagh Rd, Nandanvan Colony, Indore, Madhya Pradesh 452014
-- WhatsApp: +919826022251
-- Email: fitting.point.official@gmail.com
+- Address: configurable in `lib/site-config.ts` (default: Salman Plaza, 82, Manik Bagh Rd, Nandanvan Colony, Indore, Madhya Pradesh 452014)
+- WhatsApp: configurable in `lib/site-config.ts` (default: +919826022251)
+- Email: configurable in `lib/site-config.ts` (default: fitting.point.official@gmail.com)
 
 ## Environment
 

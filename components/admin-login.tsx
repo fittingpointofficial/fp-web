@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
+import { BRAND_NAME } from '@/lib/site-config';
 
 export function AdminLogin() {
   const [error, setError] = useState('');
@@ -29,7 +30,7 @@ export function AdminLogin() {
         <Image src="/logo.svg" alt="Fitting Point" width={52} height={52} className="rounded-full border border-black/10 p-1" />
         <div>
           <h1 className="font-heading text-3xl">Admin Login</h1>
-          <p className="text-xs text-black/60">Fitting Point Control Center</p>
+          <p className="text-xs text-black/60">{BRAND_NAME} Control Center</p>
         </div>
       </div>
       <input name="username" required placeholder="Email ID" className="w-full rounded-xl border px-4 py-3" />
