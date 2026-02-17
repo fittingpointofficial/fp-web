@@ -2,6 +2,7 @@
 
 import { Dispatch, FormEvent, SetStateAction, useEffect, useMemo, useState } from 'react';
 import { Category, Order, Product, SiteSettings } from '@/lib/types';
+import { CONTACT } from '@/lib/site-config';
 
 type AdminData = {
   products: Product[];
@@ -14,16 +15,32 @@ type AdminTab = 'dashboard' | 'products' | 'categories' | 'orders' | 'customizat
 
 const EMPTY_SETTINGS: SiteSettings = {
   logoUrl: '',
-  whatsappNumber: '919826022251',
-  contactEmail: '',
+  whatsappNumber: CONTACT.whatsappNumber,
+  contactEmail: CONTACT.email,
   primaryColor: '#165D54',
   secondaryColor: '#C39A5F',
   fontStyle: 'serif',
   homeBanners: []
 };
 
+async function fetchJson<T>(url: string): Promise<{ ok: boolean; status: number; data: T | null }> {
+  const res = await fetch(url);
+  let data: T | null = null;
+  try {
+    data = (await res.json()) as T;
+  } catch {
+    data = null;
+  }
+  return { ok: res.ok, status: res.status, data };
+}
+
+function asArray<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}
+
 export function AdminClient({ initialTab }: { initialTab: string }) {
   const [tab, setTab] = useState<AdminTab>((initialTab as AdminTab) || 'dashboard');
+  const [loadError, setLoadError] = useState('');
   const [data, setData] = useState<AdminData>({
     products: [],
     categories: [],
@@ -32,14 +49,38 @@ export function AdminClient({ initialTab }: { initialTab: string }) {
   });
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/admin/products').then((r) => r.json()),
-      fetch('/api/admin/categories').then((r) => r.json()),
-      fetch('/api/admin/orders').then((r) => r.json()),
-      fetch('/api/admin/settings').then((r) => r.json())
-    ]).then(([products, categories, orders, settings]) =>
-      setData({ products, categories, orders, settings })
-    );
+    (async () => {
+      const [productsRes, categoriesRes, ordersRes, settingsRes] = await Promise.all([
+        fetchJson<Product[] | { error: string }>('/api/admin/products'),
+        fetchJson<Category[] | { error: string }>('/api/admin/categories'),
+        fetchJson<Order[] | { error: string }>('/api/admin/orders'),
+        fetchJson<SiteSettings | { error: string }>('/api/admin/settings')
+      ]);
+
+      const unauthorized = [productsRes, categoriesRes, ordersRes, settingsRes].some(
+        (res) => res.status === 401
+      );
+
+      if (unauthorized) {
+        window.location.reload();
+        return;
+      }
+
+      const hasFailure = [productsRes, categoriesRes, ordersRes, settingsRes].some((res) => !res.ok);
+      if (hasFailure) {
+        setLoadError('Unable to load one or more admin sections. Please refresh.');
+      }
+
+      setData({
+        products: asArray<Product>(productsRes.data),
+        categories: asArray<Category>(categoriesRes.data),
+        orders: asArray<Order>(ordersRes.data),
+        settings:
+          settingsRes.data && !Array.isArray(settingsRes.data) && 'whatsappNumber' in settingsRes.data
+            ? (settingsRes.data as SiteSettings)
+            : EMPTY_SETTINGS
+      });
+    })();
   }, []);
 
   const dashboard = useMemo(() => {
@@ -87,6 +128,12 @@ export function AdminClient({ initialTab }: { initialTab: string }) {
         </button>
       </div>
 
+      {loadError ? (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {loadError}
+        </div>
+      ) : null}
+
       {tab === 'dashboard' && (
         <div className="grid gap-4 md:grid-cols-4">
           <Card title="Total orders" value={dashboard.totalOrders} />
@@ -125,6 +172,7 @@ function ProductManager({
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     const name = String(f.get('name'));
+    const badgeText = String(f.get('badge') || '').toUpperCase();
     const payload: Product = {
       id: crypto.randomUUID(),
       slug: name.toLowerCase().replaceAll(' ', '-'),
@@ -135,16 +183,18 @@ function ProductManager({
       categoryId: String(f.get('categoryId')),
       primaryImage: String(f.get('primaryImage')),
       hoverImage: String(f.get('hoverImage')),
-      badge: (String(f.get('badge') || '') || null) as Product['badge'],
+      badge: badgeText === 'NEW' || badgeText === 'BESTSELLER' ? badgeText : null,
       visible: f.get('visible') === 'on'
     };
 
-    const saved = await fetch('/api/admin/products', {
+    const res = await fetch('/api/admin/products', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
-    }).then((r) => r.json());
+    });
 
+    if (!res.ok) return;
+    const saved = (await res.json()) as Product;
     setData((d) => ({ ...d, products: [saved, ...d.products] }));
     e.currentTarget.reset();
   };
@@ -201,12 +251,14 @@ function CategoryManager({
       sortOrder: Number(f.get('sortOrder'))
     };
 
-    const saved = await fetch('/api/admin/categories', {
+    const res = await fetch('/api/admin/categories', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
-    }).then((r) => r.json());
+    });
 
+    if (!res.ok) return;
+    const saved = (await res.json()) as Category;
     setData((d) => ({ ...d, categories: [...d.categories, saved] }));
   };
 
@@ -242,11 +294,14 @@ function OrderManager({
   );
 
   const patch = async (id: string, status: Order['status'], notes: string) => {
-    const updated = await fetch('/api/admin/orders', {
+    const res = await fetch('/api/admin/orders', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, status, notes })
-    }).then((r) => r.json());
+    });
+    if (!res.ok) return;
+
+    const updated = (await res.json()) as Order;
 
     setData((d) => ({
       ...d,
@@ -310,11 +365,14 @@ function CustomizationManager({
       fontStyle: (String(f.get('fontStyle') || 'serif') as SiteSettings['fontStyle'])
     };
 
-    const settings = await fetch('/api/admin/settings', {
+    const res = await fetch('/api/admin/settings', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(patch)
-    }).then((r) => r.json());
+    });
+    if (!res.ok) return;
+
+    const settings = (await res.json()) as SiteSettings;
 
     setData((d) => ({ ...d, settings }));
   };
@@ -352,11 +410,14 @@ function SettingsManager({
       whatsappNumber: String(f.get('whatsappNumber') || ''),
       contactEmail: String(f.get('contactEmail') || '')
     };
-    const settings = await fetch('/api/admin/settings', {
+    const res = await fetch('/api/admin/settings', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(patch)
-    }).then((r) => r.json());
+    });
+    if (!res.ok) return;
+
+    const settings = (await res.json()) as SiteSettings;
     setData((d) => ({ ...d, settings }));
   };
 

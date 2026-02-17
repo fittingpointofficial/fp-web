@@ -5,8 +5,14 @@ import { requireAdmin } from '@/lib/admin-api';
 
 const schema = z.object({
   logoUrl: z.string().optional(),
-  whatsappNumber: z.string().regex(/^\d{8,15}$/).optional(),
-  contactEmail: z.string().email().optional(),
+  whatsappNumber: z
+    .string()
+    .optional()
+    .refine((v) => !v || /^\+?\d{8,15}$/.test(v), 'Invalid WhatsApp number'),
+  contactEmail: z
+    .string()
+    .optional()
+    .refine((v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), 'Invalid email'),
   primaryColor: z.string().optional(),
   secondaryColor: z.string().optional(),
   fontStyle: z.enum(['serif', 'sans']).optional(),
@@ -28,5 +34,11 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  return NextResponse.json(await db.settings.update(parsed.data));
+  const normalized = {
+    ...parsed.data,
+    whatsappNumber: parsed.data.whatsappNumber?.replace('+', ''),
+    contactEmail: parsed.data.contactEmail?.trim()
+  };
+
+  return NextResponse.json(await db.settings.update(normalized));
 }
