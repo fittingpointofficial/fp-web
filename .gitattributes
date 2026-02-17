@@ -1,0 +1,17 @@
+# Normalize line endings to reduce cross-platform conflicts
+* text=auto eol=lf
+
+# TypeScript / JS / JSON sources should always merge as text
+*.ts text
+*.tsx text
+*.js text
+*.jsx text
+*.json text
+*.md text
+
+# Keep SVG and SQL as text for clearer diffs/merges
+*.svg text
+*.sql text
+
+# Avoid accidental merge conflict noise from generated folders
+.next/** -text

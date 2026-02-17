@@ -1,0 +1,16 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E8D39A"/>
+      <stop offset="1" stop-color="#B58A3F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="256" cy="256" r="248" fill="#111111"/>
+  <circle cx="256" cy="256" r="228" stroke="url(#g)" stroke-width="6"/>
+  <circle cx="256" cy="256" r="190" stroke="url(#g)" stroke-width="2" stroke-dasharray="4 6"/>
+  <text x="256" y="170" text-anchor="middle" fill="url(#g)" font-size="44" font-family="Georgia">Fitting Point</text>
+  <text x="256" y="215" text-anchor="middle" fill="url(#g)" font-size="20" font-family="Georgia">Made to Fit</text>
+  <text x="256" y="348" text-anchor="middle" fill="url(#g)" font-size="20" font-family="Georgia">Since 2025</text>
+  <path d="M146 256C182 240 330 240 366 256" stroke="url(#g)" stroke-width="4"/>
+  <path d="M146 274C182 290 330 290 366 274" stroke="url(#g)" stroke-width="4"/>
+</svg>
